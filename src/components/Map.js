@@ -299,6 +299,8 @@ export const MapContent = (props) => {
         console.log(grids);
         const wind = grids.interpolate(e.lngLat.lng, e.lngLat.lat);
         const value = formatVector(wind, "km/h");
+        const angle = -(90 - value.split(" ")[0].slice(0, -1));
+        console.log(angle);
         // var coordinates = e.features[0].geometry.coordinates.slice();
         // var title = e.features[0].properties.title;
         // var description = e.features[0].properties.description;
@@ -314,7 +316,13 @@ export const MapContent = (props) => {
         // // based on the feature found.
         popup
           .setLngLat(e.lngLat)
-          .setHTML("<h3>" + value + "</h3><p>")
+          .setHTML(
+            "<div><h3>" +
+              value +
+              "</h3><div style='font-size: 24px; transform: rotate(" +
+              angle +
+              "deg)'>←</div>"
+          )
           .addTo(map);
       });
 
