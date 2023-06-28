@@ -3,6 +3,8 @@ import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-load
 import { MAPBOX_ACCESS_TOKEN } from "../constants";
 import styles from "./Map.style.module.css";
 import { ScalarFill, WindLayer, Particles } from "@sakitam-gis/mapbox-wind";
+import windData from "../data.json";
+import * as dat from "dat.gui";
 
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
@@ -57,23 +59,24 @@ export const MapContent = (props) => {
   const [globalMap, setGlobalMap] = useState();
 
   useEffect(() => {
-    const fetchData = async () => {
-      await fetch(
-        "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/wind-layer/json/wind.json"
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          data = data.map((item, idx) => {
-            item.header = Object.assign(item.header, {
-              parameterCategory: 1,
-              parameterNumber: idx === 0 ? 2 : 3,
-            });
-            return item;
-          });
-          setData(data);
-        });
-    };
-    fetchData();
+    // const fetchData = async () => {
+    //   await fetch(
+    //     "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/wind-layer/json/wind.json"
+    //   )
+    //     .then((res) => res.json())
+    //     .then((data) => {
+    //       data = data.map((item, idx) => {
+    //         item.header = Object.assign(item.header, {
+    //           parameterCategory: 1,
+    //           parameterNumber: idx === 0 ? 2 : 3,
+    //         });
+    //         return item;
+    //       });
+    //       setData(data);
+    //     });
+    // };
+    // fetchData();
+    setData(windData);
   }, []);
 
   const getStyle = (styleId) => {
@@ -112,74 +115,68 @@ export const MapContent = (props) => {
 
     map.addControl(new mapboxgl.NavigationControl());
     map.on("load", function () {
-      // fetch(
-      //   "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/wind-layer/json/wind.json"
-      // )
-      //   .then((res) => res.json())
-      //   .then((data) => {
-      //     data = data.map((item, idx) => {
-      //       item.header = Object.assign(item.header, {
-      //         parameterCategory: 1,
-      //         parameterNumber: idx === 0 ? 2 : 3,
-      //       });
-      //       return item;
-      //     });
-      //   });
-      // const windInterpolateColor = color.wind.reduce(
-      //   (result, item) =>
-      //     result.concat(item[0], "rgba(" + item[1].join(",") + ")"),
-      //   []
-      // );
-      // const fillLayer1 = new ScalarFill(
-      //   "wind1",
-      //   {
-      //     type: "image",
-      //     url: "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/assets/image/uv.png",
-      //     extent: [
-      //       [-180, 85.051129],
-      //       [-180, -85.051129],
-      //       [180, 85.051129],
-      //       [180, -85.051129],
-      //     ],
-      //     width: 1440,
-      //     height: 720,
-      //     uMin: -34.37186050415039,
-      //     uMax: 46.51813888549805,
-      //     vMin: -42.12305450439453,
-      //     vMax: 49.66694259643555,
-      //   },
-      //   {
-      //     wrapX: true,
-      //     styleSpec: {
-      //       "fill-color": [
-      //         "interpolate",
-      //         ["linear"],
-      //         ["get", "value"],
-      //         ...windInterpolateColor,
-      //       ],
-      //       opacity: [
-      //         "interpolate",
-      //         ["exponential", 0.5],
-      //         ["zoom"],
-      //         0,
-      //         1,
-      //         10,
-      //         0,
-      //       ],
-      //     },
-      //     renderForm: "rg",
-      //     // widthSegments: 720,
-      //     // heightSegments: 360,
-      //     widthSegments: 1,
-      //     heightSegments: 1,
-      //     displayRange: [0, 150],
-      //     // mappingRange: [0, 500000],
-      //     mappingRange: [0, 0],
-      //     wireframe: false,
-      //   }
-      // );
+      // var w = window.innerWidth;
+      // var h = window.innerHeight;
+      // console.log(w, h);
+      const windInterpolateColor = color.wind.reduce(
+        (result, item) =>
+          result.concat(item[0], "rgba(" + item[1].join(",") + ")"),
+        []
+      );
+      const fillLayer1 = new ScalarFill(
+        "wind1",
+        {
+          // type: "image",
+          // url: "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/assets/image/uv.png",
+          type: "jsonArray",
+          data: data,
+          extent: [
+            [-180, 85],
+            [-180, -85],
+            [180, 85],
+            [180, -85],
+          ],
+          width: 1440,
+          height: 720,
+          // width: w,
+          // height: h,
+          uMin: -34.37186050415039,
+          uMax: 46.51813888549805,
+          vMin: -42.12305450439453,
+          vMax: 49.66694259643555,
+        },
+        {
+          wrapX: true,
+          styleSpec: {
+            "fill-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "value"],
+              ...windInterpolateColor,
+            ],
+            opacity: [
+              "interpolate",
+              ["exponential", 0.5],
+              ["zoom"],
+              0,
+              1,
+              10,
+              0.2,
+            ],
+          },
+          renderForm: "rg",
+          // widthSegments: 720,
+          // heightSegments: 360,
+          widthSegments: 1,
+          heightSegments: 1,
+          displayRange: [0, 150],
+          // mappingRange: [0, 500000],
+          mappingRange: [0, 0],
+          wireframe: false,
+        }
+      );
 
-      // map.addLayer(fillLayer1);
+      map.addLayer(fillLayer1);
 
       // const fillLayer = new ScalarFill(
       //   "wind",
@@ -234,16 +231,38 @@ export const MapContent = (props) => {
 
       const windLayer = new WindLayer("wind", data, {
         windOptions: {
-          frameRate: 16,
+          frameRate: 20,
           maxAge: 80,
           globalAlpha: 0.9,
           velocityScale: 0.01,
-          // paths: 5000,
+          // paths: 8000,
           paths: 3782,
           lineWidth: 2,
+          // particleMultiplier: 1 / 100000,
+          // colorScale: (m) => {
+          //   console.log(m);
+          //   return "#fff";
+          // },
+          // colorScale: [
+          //   "rgb(36,104, 180)",
+          //   "rgb(60,157, 194)",
+          //   "rgb(128,205,193 )",
+          //   "rgb(151,218,168 )",
+          //   "rgb(198,231,181)",
+          //   "rgb(238,247,217)",
+          //   "rgb(255,238,159)",
+          //   "rgb(252,217,125)",
+          //   "rgb(255,182,100)",
+          //   "rgb(252,150,75)",
+          //   "rgb(250,112,52)",
+          //   "rgb(245,64,32)",
+          //   "rgb(237,45,28)",
+          //   "rgb(220,24,32)",
+          //   "rgb(180,0,35)",
+          // ],
         },
       });
-      console.log(data);
+      // console.log(data);
 
       map.addLayer(windLayer);
       // window.windLayer.addTo(map);
@@ -256,66 +275,175 @@ export const MapContent = (props) => {
       //   lineWidth: 2.1,
       //   opacity: 1,
       // }
+      //.051129
 
-      const particles = new Particles(
-        "particles",
-        {
-          type: "image",
-          url: "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/assets/image/uv-mc.png",
-          extent: [
-            [-180, 85.051129],
-            [-180, -85.051129],
-            [180, 85.051129],
-            [180, -85.051129],
-          ],
-          width: 1024,
-          height: 1024,
-          uMin: -34.37186050415039,
-          uMax: 46.51813888549805,
-          vMin: -42.12305450439453,
-          vMax: 49.66694259643555,
-        },
-        {
-          wrapX: true,
-          lineWidth: 2.2,
-          styleSpec: {
-            color: [
-              "interpolate",
-              ["linear"],
-              ["get", "value"],
-              0.0,
-              "#fff",
-              100.0,
-              "#fff",
-            ],
-            opacity: [
-              "interpolate",
-              ["exponential", 0.5],
-              ["zoom"],
-              1, // zoom
-              1, // opacity
-              5, // zoom
-              0.8, // opacity
-            ],
-            numParticles: [
-              "interpolate",
-              ["exponential", 0.5],
-              ["zoom"],
-              0, // zoom
-              65535 * 2, // numParticles
-              8, // zoom
-              512, // numParticles
-            ],
-          },
-        }
-      );
+      // const particles = new Particles(
+      //   "particles",
+      //   {
+      //     type: "image",
+      //     url: "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/assets/image/uv-mc.png",
+      //     extent: [
+      //       [-180, 85],
+      //       [-180, -85],
+      //       [180, 85],
+      //       [180, -85],
+      //     ],
+      //     width: 1024,
+      //     height: 1024,
+      //     uMin: -34.37186050415039,
+      //     uMax: 46.51813888549805,
+      //     vMin: -42.12305450439453,
+      //     vMax: 49.66694259643555,
+      //   },
+      //   {
+      //     wrapX: true,
+      //     lineWidth: 2.2,
+      //     styleSpec: {
+      //       color: [
+      //         "interpolate",
+      //         ["linear"],
+      //         ["get", "value"],
+      //         0.0,
+      //         "#fff",
+      //         100.0,
+      //         "#fff",
+      //       ],
+      //       opacity: [
+      //         "interpolate",
+      //         ["exponential", 0.5],
+      //         ["zoom"],
+      //         1, // zoom
+      //         1, // opacity
+      //         5, // zoom
+      //         0.8, // opacity
+      //       ],
+      //       numParticles: [
+      //         "interpolate",
+      //         ["exponential", 0.5],
+      //         ["zoom"],
+      //         0, // zoom
+      //         65535 * 2, // numParticles
+      //         8, // zoom
+      //         512, // numParticles
+      //       ],
+      //     },
+      //   }
+      // );
 
       // map.addLayer(particles);
+      const gui = new dat.GUI();
+
+      gui
+        .add(
+          {
+            addScalarFill: true,
+          },
+          "addScalarFill"
+        )
+        .onChange(function (state) {
+          if (state) {
+            if (map.getLayer("wind1")) {
+              map.addLayer(fillLayer1, "wind1");
+            } else {
+              map.addLayer(fillLayer1);
+            }
+          } else {
+            console.log(map.getLayer("wind1"));
+            map.removeLayer("wind1");
+          }
+        });
+
+      gui
+        .add(
+          {
+            addWind: true,
+          },
+          "addWind"
+        )
+        .onChange(function (state) {
+          if (state) {
+            if (map.getLayer("wind")) {
+              map.addLayer(windLayer, "wind");
+              document.getElementsByClassName(
+                "mapbox-overlay-canvas"
+              )[0].style.display = "block";
+            } else {
+              map.addLayer(windLayer);
+              document.getElementsByClassName(
+                "mapbox-overlay-canvas"
+              )[0].style.display = "block";
+            }
+          } else {
+            map.removeLayer("wind");
+            document.getElementsByClassName(
+              "mapbox-overlay-canvas"
+            )[0].style.display = "none";
+            // windLayer.remove();
+          }
+        });
+
+      // gui
+      //   .add(
+      //     {
+      //       paths: 3782,
+      //     },
+      //     "paths",
+      //     0,
+      //     10000
+      //   )
+      //   .onChange(function (num) {
+      //     windLayer.setWindOptions({
+      //       paths: num,
+      //     });
+      //   });
+
+      const windConfig = {
+        frameRate: 20,
+        maxAge: 80,
+        globalAlpha: 0.9,
+        velocityScale: 0.01,
+        paths: 3782,
+        lineWidth: 2,
+        colorScale: "#fff",
+        particleMultiplier: 1 / 300,
+      };
+
+      gui.add(windConfig, "frameRate", 0, 80).onChange(function () {
+        windLayer.setWindOptions(windConfig);
+      });
+
+      gui.add(windConfig, "maxAge", 0, 160).onChange(function () {
+        windLayer.setWindOptions(windConfig);
+      });
+
+      gui.add(windConfig, "globalAlpha", 0, 2).onChange(function () {
+        windLayer.setWindOptions(windConfig);
+      });
+
+      gui.add(windConfig, "velocityScale", 0, 0.1).onChange(function () {
+        windLayer.setWindOptions(windConfig);
+      });
+
+      gui.add(windConfig, "paths", 0, 10000).onChange(function () {
+        windLayer.setWindOptions(windConfig);
+      });
+
+      gui.add(windConfig, "lineWidth", 0, 10).onChange(function () {
+        windLayer.setWindOptions(windConfig);
+      });
+
+      gui.add(windConfig, "particleMultiplier", 0, 0.1).onChange(function () {
+        windLayer.setWindOptions(windConfig);
+      });
+
+      gui.addColor(windConfig, "colorScale").onChange(function (e) {
+        windLayer.setWindOptions(windConfig);
+      });
     });
     setGlobalMap(map);
 
     return () => map.remove();
-  }, [style]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [style, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div className={styles.container} ref={mapContainerRef}></div>;
 };
