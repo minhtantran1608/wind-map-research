@@ -3,8 +3,10 @@ import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-load
 import { MAPBOX_ACCESS_TOKEN } from "../constants";
 import styles from "./Map.style.module.css";
 import { ScalarFill, WindLayer, Particles } from "@sakitam-gis/mapbox-wind";
-import windData from "../data.json";
+// import windData from "../data.json";
+import windData from "../current-wind-surface-level-gfs-1.0.json";
 import * as dat from "dat.gui";
+import buildGrid from "../utils";
 
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
@@ -51,6 +53,22 @@ const color = {
     [104, [128, 128, 128, 255]],
   ],
 };
+
+// function spread(p, low, high) {
+//   return p * (high - low) + low;
+// }
+
+function formatScalar(value, units) {
+  return (value * 3.6).toFixed(0) + " " + units;
+}
+
+function formatVector(wind, units) {
+  var τ = 2 * Math.PI;
+  console.log(wind);
+  var d = (Math.atan2(-wind[0], -wind[1]) / τ) * 360; // calculate into-the-wind cardinal degrees
+  var wd = Math.round(((d + 360) % 360) / 5) * 5; // shift [-180, 180] to [0, 360], and round to nearest 5.
+  return wd.toFixed(0) + "° @ " + formatScalar(wind[2], units);
+}
 
 export const MapContent = (props) => {
   const { style = 1, initialPos = [16.4533875, 107.5420937] } = props;
@@ -123,6 +141,7 @@ export const MapContent = (props) => {
           result.concat(item[0], "rgba(" + item[1].join(",") + ")"),
         []
       );
+
       const fillLayer1 = new ScalarFill(
         "wind1",
         {
@@ -161,7 +180,7 @@ export const MapContent = (props) => {
               0,
               1,
               10,
-              0.2,
+              0.5,
             ],
           },
           renderForm: "rg",
@@ -265,6 +284,45 @@ export const MapContent = (props) => {
       // console.log(data);
 
       map.addLayer(windLayer);
+
+      const grids = buildGrid(data);
+
+      var popup = new mapboxgl.Popup({
+        offset: [0, -7],
+        closeButton: false,
+        closeOnClick: false,
+      });
+
+      map.on("mousemove", function (e) {
+        // map.getCanvas().style.cursor = "pointer";
+        console.log(e);
+        console.log(grids);
+        const wind = grids.interpolate(e.lngLat.lng, e.lngLat.lat);
+        const value = formatVector(wind, "km/h");
+        // var coordinates = e.features[0].geometry.coordinates.slice();
+        // var title = e.features[0].properties.title;
+        // var description = e.features[0].properties.description;
+        // var title2 = e.features[0].properties.title2;
+        // var description2 = e.features[0].properties.description2;
+        // // Ensure that if the map is zoomed out such that multiple
+        // // copies of the feature are visible, the popup appears
+        // // over the copy being pointed to.
+        // while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        // coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        // }
+        // // Populate the popup and set its coordinates
+        // // based on the feature found.
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML("<h3>" + value + "</h3><p>")
+          .addTo(map);
+      });
+
+      map.on("mouseleave", "wind", function () {
+        map.getCanvas().style.cursor = "";
+        popup.remove();
+      });
+
       // window.windLayer.addTo(map);
       // const particlesConfig = {
       //   wrapX: true,
