@@ -4,7 +4,7 @@ import { MAPBOX_ACCESS_TOKEN } from "../constants";
 import styles from "./Map.style.module.css";
 import { ScalarFill, WindLayer, Particles } from "@sakitam-gis/mapbox-wind";
 // import windData from "../data.json";
-import windData from "../current-wind-surface-level-gfs-1.0.json";
+import windData from "../viet2.json";
 import * as dat from "dat.gui";
 import buildGrid from "../utils";
 
@@ -63,15 +63,16 @@ function formatScalar(value, units) {
 }
 
 function formatVector(wind, units) {
+  if (!wind) return "";
   var τ = 2 * Math.PI;
-  console.log(wind);
+  // console.log(wind);
   var d = (Math.atan2(-wind[0], -wind[1]) / τ) * 360; // calculate into-the-wind cardinal degrees
   var wd = Math.round(((d + 360) % 360) / 5) * 5; // shift [-180, 180] to [0, 360], and round to nearest 5.
   return wd.toFixed(0) + "° @ " + formatScalar(wind[2], units);
 }
 
 export const MapContent = (props) => {
-  const { style = 1, initialPos = [16.4533875, 107.5420937] } = props;
+  const { style = 2, initialPos = [16.4533875, 107.5420937] } = props;
   const mapContainerRef = useRef(null);
   const [data, setData] = useState();
   const [globalMap, setGlobalMap] = useState();
@@ -94,6 +95,7 @@ export const MapContent = (props) => {
     //     });
     // };
     // fetchData();
+    console.log(windData[0].data.length, windData[1].data.length);
     setData(windData);
   }, []);
 
@@ -295,12 +297,10 @@ export const MapContent = (props) => {
 
       map.on("mousemove", function (e) {
         // map.getCanvas().style.cursor = "pointer";
-        console.log(e);
-        console.log(grids);
         const wind = grids.interpolate(e.lngLat.lng, e.lngLat.lat);
         const value = formatVector(wind, "km/h");
         const angle = -(90 - value.split(" ")[0].slice(0, -1));
-        console.log(angle);
+        // console.log(data);
         // var coordinates = e.features[0].geometry.coordinates.slice();
         // var title = e.features[0].properties.title;
         // var description = e.features[0].properties.description;
@@ -398,6 +398,21 @@ export const MapContent = (props) => {
 
       // map.addLayer(particles);
       const gui = new dat.GUI();
+
+      // gui
+      //   .add(
+      //     {
+      //       satelliteMode: true,
+      //     },
+      //     "satelliteMode"
+      //   )
+      //   .onChange(function (state) {
+      //     if (state) {
+      //       map.setStyle(getStyle(2));
+      //     } else {
+      //       map.setStyle(getStyle(1));
+      //     }
+      //   });
 
       gui
         .add(

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "assets/*": ["./src/assets/*"],
+      "common/*": ["./src/common/*"],
+      "components/*": ["./src/common/components/*"],
+      "constants/*": ["./src/common/constants/*"],
+      "content/*": ["./src/common/content/*"],
+      "utils/*": ["./src/common/utils/*"],
+      "features": ["./src/features/*"],
+      "redux/*": ["./src/redux/*"],
+      "setup/*": ["./src/setup/*"]
+    }
+  },
+  "exclude": ["node_modules"]
+}

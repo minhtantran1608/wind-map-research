@@ -104,8 +104,9 @@ export default function buildGrid(builder) {
 
   function interpolate(λ, φ) {
     var i = floorMod(λ - λ0, 360) / Δλ; // calculate longitude index in wrapped range [0, 360)
+    // if (i < 0 || i >= ni - 1) i = 0; // if λ is outside grid, assume it is repeated from opposite side
     var j = (φ0 - φ) / Δφ; // calculate latitude index in direction +90 to -90
-
+    if (j < 0) j = (header.la2 - φ) / Δφ; // if south of grid, flip to north
     //         1      2           After converting λ and φ to fractional grid indexes i and j, we find the
     //        fi  i   ci          four points "G" that enclose point (i, j). These points are at the four
     //         | =1.4 |           corners specified by the floor and ceiling of i and j. For example, given
@@ -121,6 +122,7 @@ export default function buildGrid(builder) {
       cj = fj + 1;
 
     var row;
+
     if ((row = grid[fj])) {
       var g00 = row[fi];
       var g10 = row[ci];
@@ -142,6 +144,7 @@ export default function buildGrid(builder) {
     interpolate: interpolate,
     forEachPoint: function (cb) {
       for (var j = 0; j < nj; j++) {
+        console.log(j, grid);
         var row = grid[j] || [];
         for (var i = 0; i < ni; i++) {
           cb(floorMod(180 + λ0 + i * Δλ, 360) - 180, φ0 - j * Δφ, row[i]);
