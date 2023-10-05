@@ -3,8 +3,8 @@ import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-load
 import { MAPBOX_ACCESS_TOKEN } from "../constants";
 import styles from "./Map.style.module.css";
 import { ScalarFill, WindLayer, Particles } from "@sakitam-gis/mapbox-wind";
-// import windData from "../data.json";
-import windData from "../viet2.json";
+import windData from "../generated_data.json";
+// import windData from "../viet.json";
 import * as dat from "dat.gui";
 import buildGrid from "../utils";
 
@@ -59,23 +59,24 @@ const color = {
 // }
 
 function formatScalar(value, units) {
+  console.log(value);
   return (value * 3.6).toFixed(0) + " " + units;
 }
 
 function formatVector(wind, units) {
   if (!wind) return "";
   var τ = 2 * Math.PI;
-  // console.log(wind);
   var d = (Math.atan2(-wind[0], -wind[1]) / τ) * 360; // calculate into-the-wind cardinal degrees
   var wd = Math.round(((d + 360) % 360) / 5) * 5; // shift [-180, 180] to [0, 360], and round to nearest 5.
   return wd.toFixed(0) + "° @ " + formatScalar(wind[2], units);
 }
 
 export const MapContent = (props) => {
-  const { style = 2, initialPos = [16.4533875, 107.5420937] } = props;
+  const { style = 1, initialPos = [16.4533875, 107.5420937] } = props;
   const mapContainerRef = useRef(null);
   const [data, setData] = useState();
   const [globalMap, setGlobalMap] = useState();
+  // const [winds, setWinds] = useState();
 
   useEffect(() => {
     // const fetchData = async () => {
@@ -96,7 +97,20 @@ export const MapContent = (props) => {
     // };
     // fetchData();
     console.log(windData[0].data.length, windData[1].data.length);
-    setData(windData);
+    const newData = windData;
+    // console.log(
+    //   newData.map((item) => ({
+    //     ...item,
+    //     data: [...item.data].concat(Array(100).fill(0)),
+    //   }))
+    // );
+    setData(newData);
+    // setData(
+    //   newData.map((item) => ({
+    //     ...item,
+    //     data: [...Array(0).fill(0), ...item.data].concat(Array(0).fill(0)),
+    //   }))
+    // );
   }, []);
 
   const getStyle = (styleId) => {
@@ -144,60 +158,60 @@ export const MapContent = (props) => {
         []
       );
 
-      const fillLayer1 = new ScalarFill(
-        "wind1",
-        {
-          // type: "image",
-          // url: "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/assets/image/uv.png",
-          type: "jsonArray",
-          data: data,
-          extent: [
-            [-180, 85],
-            [-180, -85],
-            [180, 85],
-            [180, -85],
-          ],
-          width: 1440,
-          height: 720,
-          // width: w,
-          // height: h,
-          uMin: -34.37186050415039,
-          uMax: 46.51813888549805,
-          vMin: -42.12305450439453,
-          vMax: 49.66694259643555,
-        },
-        {
-          wrapX: true,
-          styleSpec: {
-            "fill-color": [
-              "interpolate",
-              ["linear"],
-              ["get", "value"],
-              ...windInterpolateColor,
-            ],
-            opacity: [
-              "interpolate",
-              ["exponential", 0.5],
-              ["zoom"],
-              0,
-              1,
-              10,
-              0.5,
-            ],
-          },
-          renderForm: "rg",
-          // widthSegments: 720,
-          // heightSegments: 360,
-          widthSegments: 1,
-          heightSegments: 1,
-          displayRange: [0, 150],
-          // mappingRange: [0, 500000],
-          mappingRange: [0, 0],
-          wireframe: false,
-        }
-      );
+      // const fillLayer1 = new ScalarFill(
+      //   "wind1",
+      //   {
+      //     // type: "image",
+      //     // url: "https://sakitam.oss-cn-beijing.aliyuncs.com/codepen/assets/image/uv.png",
+      //     type: "jsonArray",
+      //     data: data,
+      //     extent: [
+      //       [-180, 85],
+      //       [-180, -85],
+      //       [180, 85],
+      //       [180, -85],
+      //     ],
+      //     width: 1440,
+      //     height: 720,
+      //     // width: w,
+      //     // height: h,
+      //     uMin: -34.37186050415039,
+      //     uMax: 46.51813888549805,
+      //     vMin: -42.12305450439453,
+      //     vMax: 49.66694259643555,
+      //   },
+      //   {
+      //     wrapX: true,
+      //     styleSpec: {
+      //       "fill-color": [
+      //         "interpolate",
+      //         ["linear"],
+      //         ["get", "value"],
+      //         ...windInterpolateColor,
+      //       ],
+      //       opacity: [
+      //         "interpolate",
+      //         ["exponential", 0.5],
+      //         ["zoom"],
+      //         0,
+      //         1,
+      //         10,
+      //         0.5,
+      //       ],
+      //     },
+      //     renderForm: "rg",
+      //     // widthSegments: 720,
+      //     // heightSegments: 360,
+      //     widthSegments: 1,
+      //     heightSegments: 1,
+      //     displayRange: [0, 150],
+      //     // mappingRange: [0, 500000],
+      //     mappingRange: [0, 0],
+      //     wireframe: false,
+      //   }
+      // );
 
-      map.addLayer(fillLayer1);
+      // map.addLayer(fillLayer1);
 
       // const fillLayer = new ScalarFill(
       //   "wind",
@@ -249,7 +263,8 @@ export const MapContent = (props) => {
       // );
 
       // map.addLayer(fillLayer);
-
+      let windarr = [];
+      console.log(data);
       const windLayer = new WindLayer("wind", data, {
         windOptions: {
           frameRate: 20,
@@ -260,10 +275,15 @@ export const MapContent = (props) => {
           paths: 3782,
           lineWidth: 2,
           // particleMultiplier: 1 / 100000,
-          // colorScale: (m) => {
-          //   console.log(m);
-          //   return "#fff";
-          // },
+          colorScale: (m) => {
+            console.log(m);
+            // if (m > 9) windarr.push(m);
+            windarr.push(m);
+            // setWinds(windarr);
+            // if (m > 3) return "rgb(36,104, 180)";
+            // if (m > 6) return "rgb(60,157, 194)";
+            return "#fff";
+          },
           // colorScale: [
           //   "rgb(36,104, 180)",
           //   "rgb(60,157, 194)",
@@ -283,10 +303,9 @@ export const MapContent = (props) => {
           // ],
         },
       });
-      // console.log(data);
-
       map.addLayer(windLayer);
-
+      // console.log(windarr);
+      // console.log(Math.max(...windarr));
       const grids = buildGrid(data);
 
       var popup = new mapboxgl.Popup({
@@ -414,25 +433,25 @@ export const MapContent = (props) => {
       //     }
       //   });
 
-      gui
-        .add(
-          {
-            addScalarFill: true,
-          },
-          "addScalarFill"
-        )
-        .onChange(function (state) {
-          if (state) {
-            if (map.getLayer("wind1")) {
-              map.addLayer(fillLayer1, "wind1");
-            } else {
-              map.addLayer(fillLayer1);
-            }
-          } else {
-            console.log(map.getLayer("wind1"));
-            map.removeLayer("wind1");
-          }
-        });
+      // gui
+      //   .add(
+      //     {
+      //       addScalarFill: true,
+      //     },
+      //     "addScalarFill"
+      //   )
+      //   .onChange(function (state) {
+      //     if (state) {
+      //       if (map.getLayer("wind1")) {
+      //         map.addLayer(fillLayer1, "wind1");
+      //       } else {
+      //         map.addLayer(fillLayer1);
+      //       }
+      //     } else {
+      //       console.log(map.getLayer("wind1"));
+      //       map.removeLayer("wind1");
+      //     }
+      //   });
 
       gui
         .add(
